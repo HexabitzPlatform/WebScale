@@ -1,0 +1,237 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div>
+    <img style="width: 200px;" src="~/images/signature.png" />
+    <h1 class="display-4">Hexabitz Web Scale Application</h1>
+    <p>This is demo represent how to use the DOT-NET-COMS-LIB in ASP.NET core and how to connect to Load Cell module and interact with it.</p>
+</div>
+
+
+<!-- Connection Options -->
+<div class="box box-info">
+    <div class="box-header with-border">
+        <h3 class="box-title">Connection Options</h3>
+        <div class="box-tools pull-right">
+        </div>
+    </div>
+    <div class="box-body">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>COM</label>
+                        <select id="COMSelect" name="COMSelect" class="form-control select2" style="width: 100%;">
+                            <option>1</option>
+                            <option>2</option>
+                            <option>3</option>
+                            <option>4</option>
+                            <option selected="selected">5</option>
+                            <option>6</option>
+                            <option>7</option>
+                            <option>8</option>
+                            <option>9</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Baud Rate</label>
+                        <select id="BaudRateSelect" name="BaudRateSelect" class="form-control select2" style="width: 100%;">
+                            <option>1200</option>
+                            <option>2400</option>
+                            <option>4800</option>
+                            <option>9600</option>
+                            <option>19200</option>
+                            <option>38400</option>
+                            <option>57600</option>
+                            <option>115200</option>
+                            <option>230400</option>
+                            <option>460800</option>
+                            <option selected="selected">921600</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Source</label>
+                        <select id="SourceID" name="SourceID" class="form-control select2" style="width: 100%;">
+                            <option selected="selected">0</option>
+                            <option>1</option>
+                            <option>2</option>
+                            <option>3</option>
+                            <option>4</option>
+                            <option>5</option>
+                            <option>6</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Destination</label>
+                        <select id="DestinationID" name="DestinationID" class="form-control select2" style="width: 100%;">
+                            <option selected="selected">1</option>
+                            <option>2</option>
+                            <option>3</option>
+                            <option>4</option>
+                            <option>5</option>
+                            <option>6</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <button class="btn-md" onclick="Connect()">Connect</button>
+        <button class="btn-md" onclick="Disconnect()">Disconnect</button>
+
+
+        <h2> Connection Status: <span id="connectionStatus">Disconnected</span></h2>
+        <h2> Selected COM: <span id="modelCOM">##</span></h2>
+        <h2> Selected Baud Rate: <span id="modelBaudRate">######</span></h2>
+
+    </div>
+</div>
+
+<div class="row">
+    @*Left column*@
+    <div class="col-md-6">
+
+        <!-- Load Cell-->
+        <div class="box box-info">
+            <div class="box-header">
+                <h3 class="box-title">Load Cell Control</h3>
+            </div>
+            <div class="box-body">
+                <div class="form-group">
+                    <label>Time Out</label>
+                    <input id="loadCellTimeout" type="text" class="form-control" value="10000">
+                    <label>Period</label>
+                    <input id="loadCellPeriod" type="text" class="form-control" value="500">
+                </div>
+
+                <div class="form-group">
+                    <label>Unit</label>
+                    <select id="weightUnit" name="weightUnit" class="form-control select2" style="width: 100%;" onchange="unitChange()">
+                        <option selected="selected">Gram</option>
+                        <option>KG</option>
+                        <option>Ounces</option>
+                        <option>Pounds</option>
+                    </select>
+                </div>
+                <div class="row margin">
+                    <div class="col-sm-6">
+                        <h1 id="receivedValue">000.00 G</h1>
+                        <button id="readDataBTN" class="btn-md" onclick="Read()">Send to Load Cell </button>
+                        <button id="stopGettingValue" class="btn-md" onclick="Stop()">Stop</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+    //Logic control
+
+    // connection options
+    var COMSelect = document.getElementById("COMSelect");
+    var BaudRateSelect = document.getElementById("BaudRateSelect");
+    var SourceID = document.getElementById("SourceID");
+    var DestinationID = document.getElementById("DestinationID");
+    var ConnectionStatus = document.getElementById("connectionStatus");
+   
+
+    // Load Cell controls
+    var receivedValue = document.getElementById("receivedValue");
+    var loadCellTimeout = document.getElementById("loadCellTimeout");
+    var loadCellPeriod = document.getElementById("loadCellPeriod");
+    var weightUnit = document.getElementById("weightUnit");
+
+    // Variables
+    var timer;
+
+    function Connect() {
+        $.ajax({
+            url: '@Url.Action("Connect")',
+            type: "POST",
+            dataType: "json",
+            data: {
+                'COM': COMSelect.value,
+                'BaudRate': BaudRateSelect.value,
+            },
+            success: function (response) {
+                debugger;
+                ConnectionStatus.innerHTML = "Connected";
+                document.getElementById('modelCOM').innerHTML = response.COM;
+                document.getElementById('modelBaudRate').innerHTML = response.BaudRate;
+            },
+        });
+    }
+
+    function Disconnect() {
+        $.ajax({
+            url: '@Url.Action("Disconnect")',
+            type: "POST",
+            dataType: "json",
+        });
+        ConnectionStatus.innerHTML = "Disconnected";
+        document.getElementById('modelCOM').innerHTML = "Disconnected";
+        document.getElementById('modelBaudRate').innerHTML = "Disconnected";
+    }
+
+    function ReceiveValue() {
+        $.ajax({
+            url: '@Url.Action("ReceiveValue")',
+            type: "GET",
+            dataType: "json",
+            success: function (response) {
+                receivedValue.innerHTML = response.receivedValue;
+            },
+        });
+    }
+
+    function Stop() {
+        clearInterval(timer);
+        document.getElementById('readDataBTN').disabled = false;
+    }
+
+    function ReceiveValueFetch() {
+
+        fetch('@Url.Action("ReceiveValue")')
+            .then(function (response) {
+                return response.json()
+            })
+            .then(function (json) {
+                receivedValue.innerHTML = json.receivedValue;
+            })
+            .catch(function (ex) {
+                console.log('parsing failed', ex)
+            })
+    }
+
+    function Read() {
+        $.ajax({
+            url: '@Url.Action("SendToLoadCell")',
+            type: "POST",
+            dataType: "json",
+            data: {
+                'TimeOut': loadCellTimeout.value,
+                'Period': loadCellPeriod.value,
+                'Unit': weightUnit.value,
+            },
+        });
+        timer = setInterval(ReceiveValueFetch, loadCellPeriod.value);
+        setTimeout(Stop, loadCellTimeout.value);
+        document.getElementById('readDataBTN').disabled = true;
+    }
+
+    function unitChange() {
+        console.log(weightUnit.value);
+        console.log(weightUnit.selectedIndex);
+    }
+
+</script>
