@@ -89,8 +89,8 @@
 
 
         <h2> Connection Status: <span id="connectionStatus">Disconnected</span></h2>
-        <h2> Selected COM: <span id="modelCOM">##</span></h2>
-        <h2> Selected Baud Rate: <span id="modelBaudRate">######</span></h2>
+        <h2> Selected COM: <span id="COM">##</span></h2>
+        <h2> Selected Baud Rate: <span id="BaudRate">######</span></h2>
 
     </div>
 </div>
@@ -124,7 +124,8 @@
                 <div class="row margin">
                     <div class="col-sm-6">
                         <h1 id="receivedValue">000.00 G</h1>
-                        <button id="readDataBTN" class="btn-md" onclick="Read()">Send to Load Cell </button>
+                        <button id="readDataBTN" class="btn-md" onclick="Read()">Read</button>
+                        <button id="zeroBTN" class="btn-md" onclick="Zero()">Zero</button>
                         <button id="stopGettingValue" class="btn-md" onclick="Stop()">Stop</button>
                     </div>
                 </div>
@@ -166,8 +167,8 @@
             success: function (response) {
                 debugger;
                 ConnectionStatus.innerHTML = "Connected";
-                document.getElementById('modelCOM').innerHTML = response.COM;
-                document.getElementById('modelBaudRate').innerHTML = response.BaudRate;
+                document.getElementById('COM').innerHTML = response.com;
+                document.getElementById('BaudRate').innerHTML = response.baudRate;
             },
         });
     }
@@ -179,13 +180,13 @@
             dataType: "json",
         });
         ConnectionStatus.innerHTML = "Disconnected";
-        document.getElementById('modelCOM').innerHTML = "Disconnected";
-        document.getElementById('modelBaudRate').innerHTML = "Disconnected";
+        document.getElementById('COM').innerHTML = "Disconnected";
+        document.getElementById('BaudRate').innerHTML = "Disconnected";
     }
 
     function ReceiveValue() {
         $.ajax({
-            url: '@Url.Action("ReceiveValue")',
+            url: '@Url.Action("GetValue")',
             type: "GET",
             dataType: "json",
             success: function (response) {
@@ -195,13 +196,27 @@
     }
 
     function Stop() {
+        $.ajax({
+            url: '@Url.Action("Disconnect")',
+            type: "POST",
+            dataType: "json",
+        });
         clearInterval(timer);
         document.getElementById('readDataBTN').disabled = false;
     }
 
+    function Zero() {
+        $.ajax({
+            url: '@Url.Action("Zero")',
+            type: "POST",
+            dataType: "json",
+        });
+    }
+
     function ReceiveValueFetch() {
 
-        fetch('@Url.Action("ReceiveValue")')
+        // built in modern web browsers 
+        fetch('@Url.Action("GetValue")')
             .then(function (response) {
                 return response.json()
             })
@@ -215,7 +230,7 @@
 
     function Read() {
         $.ajax({
-            url: '@Url.Action("SendToLoadCell")',
+            url: '@Url.Action("Read")',
             type: "POST",
             dataType: "json",
             data: {

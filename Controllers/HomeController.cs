@@ -21,6 +21,10 @@ namespace WebScale.Controllers
         private static byte Options = 0x22;
         private static int Code;
 
+        private static byte channel = 0x01;
+        private static byte modulePort = 0x03;
+        private static byte module = 0x01;
+
         private static string receivedValue;
 
         public IActionResult Index()
@@ -50,18 +54,19 @@ namespace WebScale.Controllers
         [HttpPost]
         public void Disconnect()
         {
+            Code = (int)HexaInterface.Message_Codes.CODE_H26R0_STOP;
+            byte[] Payload = new byte[0];
+
+            HexaInter.SendMessage(DestinationID, SourceID, Code, Payload);
             Port.Dispose();
         }
+        
 
         [HttpPost]
-        public void SendToLoadCell(string TimeOut, string Period, string Unit)
+        public void Read(string TimeOut, string Period, string Unit)
         {
             byte[] periodBytes = BitConverter.GetBytes(int.Parse(Period));
             byte[] timeBytes = BitConverter.GetBytes(int.Parse(TimeOut));
-
-            byte channel = 0x01;
-            byte modulePort = 0x03;
-            byte module = 0x01;
 
             byte[] Payload = {
                             channel,
@@ -120,6 +125,14 @@ namespace WebScale.Controllers
         public ActionResult GetValue()
         {
             return Json(new { receivedValue });
+        }
+
+        [HttpPost]
+        public void Zero()
+        {
+            Code = (int)HexaInterface.Message_Codes.CODE_H26R0_ZEROCAL;
+            byte[] Payload = { channel };
+            HexaInter.SendMessage(DestinationID, SourceID, Code, Payload);
         }
 
         private string to_right_hex(string hex)
