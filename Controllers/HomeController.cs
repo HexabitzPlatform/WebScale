@@ -109,16 +109,23 @@ namespace WebScale.Controllers
         private void Port_DataReceived(object sender, SerialDataReceivedEventArgs e)
         {
             byte[] buffer = new byte[4];
-            Port.Read(buffer, 0, 4);
+            try
+            {
+                Port.Read(buffer, 0, 4);
 
-            string D0 = to_right_hex(buffer[3].ToString("X"));
-            string D1 = to_right_hex(buffer[2].ToString("X"));
-            string D2 = to_right_hex(buffer[1].ToString("X"));
-            string D3 = to_right_hex(buffer[0].ToString("X"));
-            string weight = D3 + D2 + D1 + D0;
+                string D0 = to_right_hex(buffer[3].ToString("X"));
+                string D1 = to_right_hex(buffer[2].ToString("X"));
+                string D2 = to_right_hex(buffer[1].ToString("X"));
+                string D3 = to_right_hex(buffer[0].ToString("X"));
+                string weight = D3 + D2 + D1 + D0;
 
-            int IntRep = int.Parse(weight, NumberStyles.AllowHexSpecifier);
-            receivedValue = BitConverter.ToSingle(BitConverter.GetBytes(IntRep), 0) + "";
+                int IntRep = int.Parse(weight, NumberStyles.AllowHexSpecifier);
+                receivedValue = BitConverter.ToSingle(BitConverter.GetBytes(IntRep), 0) + "";
+            }
+            catch 
+            {
+                receivedValue = "0";
+            }
         }
 
         [HttpGet]
